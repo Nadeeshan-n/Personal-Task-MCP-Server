@@ -73,6 +73,16 @@ async def main():
             )
             print(result.content)
 
+            result = await session.call_tool(
+                "search_tasks",
+                arguments={
+                    "keyword": "MCP"
+                }
+            )
+
+            print("\nSearch result:")
+            print(result.content)
+
 
 
 

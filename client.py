@@ -1,4 +1,5 @@
 import asyncio
+import resource
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
@@ -16,6 +17,25 @@ async def main():
 
             # Initialize connection
             await session.initialize()
+
+            resources = await session.list_resources()
+
+            print("\nAvailable resources:")
+
+            for resource in resources.resources:
+                print(f"- {resource.uri}")
+
+            prompts = await session.list_prompts()
+
+            print("\nAvailable prompts:")
+
+            for prompt in prompts.prompts:
+                print(f"- {prompt.name}")
+
+            resource = await session.read_resource("tasks://all")
+
+            print("\nAll tasks:")
+            print(resource.contents)
 
             # Discover available tools
             tools = await session.list_tools()

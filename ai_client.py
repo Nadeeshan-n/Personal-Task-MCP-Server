@@ -1,5 +1,7 @@
 import asyncio
+import json
 import os
+import re
 
 from google import genai
 from mcp import ClientSession, StdioServerParameters
@@ -8,79 +10,141 @@ from mcp.client.stdio import stdio_client
 
 async def main():
 
-    # Gemini client
     client = genai.Client(
         api_key=os.environ["GEMINI_API_KEY"]
     )
 
-    # MCP server configuration
     server_params = StdioServerParameters(
         command="python",
         args=["server.py"],
     )
 
-    # Start MCP server
     async with stdio_client(server_params) as (read, write):
 
         async with ClientSession(read, write) as session:
 
-            # Initialize MCP
             await session.initialize()
 
-            # Discover MCP tools
+            # 1. Discover MCP tools
             tools_result = await session.list_tools()
 
-            print("\nMCP tools:")
-
-            for tool in tools_result.tools:
-                print(f"- {tool.name}")
-
-            # Convert MCP tools to a simple description
             tool_descriptions = []
 
             for tool in tools_result.tools:
-                tool_descriptions.append(
-                    f"""
-Tool: {tool.name}
-Description: {tool.description}
-Input schema: {tool.inputSchema}
-"""
-                )
+                tool_descriptions.append({
+                    "name": tool.name,
+                    "description": tool.description,
+                    "inputSchema": tool.inputSchema
+                })
 
-            tools_text = "\n".join(tool_descriptions)
+            tools_text = json.dumps(
+                tool_descriptions,
+                indent=2
+            )
 
-            # User request
+            # 2. Get user request
             user_message = input("\nYou: ")
 
+            # 3. Ask Gemini which tool to use
             prompt = f"""
-You are an AI assistant connected to an MCP server.
+You are an AI assistant connected to an MCP task server.
 
 Available MCP tools:
 
 {tools_text}
 
 User request:
+
 {user_message}
 
-Decide whether an MCP tool should be used.
+If an MCP tool is required, respond ONLY with valid JSON:
 
-If a tool is needed, respond ONLY with:
+{{
+  "tool": "tool_name",
+  "arguments": {{}}
+}}
 
-TOOL: tool_name
-ARGUMENTS: JSON
+If no tool is required, respond ONLY with:
 
-If no tool is needed, respond ONLY with:
-
-NO_TOOL
+{{
+  "tool": null,
+  "arguments": {{}}
+}}
 """
 
             response = client.models.generate_content(
                 model="gemini-3.6-flash",
-                contents=prompt,
+                contents=prompt
             )
 
-            print("\nGemini:")
-            print(response.text)
+            decision_text = response.text.strip()
+
+            print("\nGemini decision:")
+            print(decision_text)
+
+            # 4. Extract JSON
+            match = re.search(
+                r"\{.*\}",
+                decision_text,
+                re.DOTALL
+            )
+
+            if not match:
+                print("Could not understand Gemini response.")
+                return
+
+            decision = json.loads(match.group())
+
+            tool_name = decision["tool"]
+            arguments = decision["arguments"]
+
+            # 5. No tool required
+            if tool_name is None:
+                print("\nFinal answer:")
+                print(user_message)
+                return
+
+            # 6. Call MCP tool
+            print(f"\nCalling MCP tool: {tool_name}")
+            print(f"Arguments: {arguments}")
+
+            result = await session.call_tool(
+                tool_name,
+                arguments=arguments
+            )
+
+            # 7. Get MCP result
+            tool_result = "\n".join(
+                getattr(content, "text", str(content))
+                for content in result.content
+            )
+
+            print("\nMCP result:")
+            print(tool_result)
+
+            # 8. Send MCP result back to Gemini
+            final_prompt = f"""
+Answer the user's request using the MCP tool result.
+
+User:
+{user_message}
+
+MCP tool used:
+{tool_name}
+
+MCP result:
+{tool_result}
+
+Give a short natural-language response to the user.
+"""
+
+            final_response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=final_prompt
+            )
+
+            print("\nFinal answer:")
+            print(final_response.text)
 
 
 if __name__ == "__main__":

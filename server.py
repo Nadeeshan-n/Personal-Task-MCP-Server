@@ -20,11 +20,20 @@ def save_tasks(tasks):
 @mcp.tool()
 def add_task(title: str) -> str:
     """Add a new task."""
+
+    if not title.strip():
+        return "Error: Task title cannot be empty."
+
     tasks = load_tasks()
 
+    if tasks:
+        new_id = max(task["id"] for task in tasks) + 1
+    else:
+        new_id = 1
+
     task = {
-        "id": len(tasks) + 1,
-        "title": title,
+        "id": new_id,
+        "title": title.strip(),
         "completed": False
     }
 
@@ -32,7 +41,6 @@ def add_task(title: str) -> str:
     save_tasks(tasks)
 
     return f"Task created: {task['id']} - {task['title']}"
-
 
 @mcp.tool()
 def list_tasks() -> str:
@@ -52,25 +60,36 @@ def list_tasks() -> str:
 @mcp.tool()
 def complete_task(task_id: int) -> str:
     """Mark a task as completed."""
+
     tasks = load_tasks()
 
     for task in tasks:
+
         if task["id"] == task_id:
+
+            if task["completed"]:
+                return f"Task {task_id} is already completed."
+
             task["completed"] = True
             save_tasks(tasks)
+
             return f"Task {task_id} completed."
 
     return f"Task {task_id} not found."
 
 @mcp.tool()
 def delete_task(task_id: int) -> str:
-    """Delete a task by its ID."""
+    """Delete a task."""
+
     tasks = load_tasks()
 
     for task in tasks:
+
         if task["id"] == task_id:
+
             tasks.remove(task)
             save_tasks(tasks)
+
             return f"Task {task_id} deleted."
 
     return f"Task {task_id} not found."

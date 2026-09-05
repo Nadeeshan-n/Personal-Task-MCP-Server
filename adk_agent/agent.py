@@ -1,38 +1,24 @@
 from pathlib import Path
 import sys
 
-from google.adk.agents import Agent
-from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
-from google.adk.tools.mcp_tool import StdioConnectionParams
+from google.adk.agents import LlmAgent
+from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
 
-# Find server.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MCP_SERVER = PROJECT_ROOT / "server.py"
 
 
-# Connect ADK to our MCP server
-task_mcp = McpToolset(
-    connection_params=StdioConnectionParams(
-        server_params=StdioServerParameters(
-            command=sys.executable,
-            args=[str(MCP_SERVER)],
-        ),
-        timeout=10,
-    )
-)
-
-
-# ADK Agent
-root_agent = Agent(
+root_agent = LlmAgent(
     name="task_agent",
-    model="gemini-3.6-flash",
-    description="An AI assistant that manages tasks using an MCP server.",
+    model="gemini-flash-latest",
+    description="An AI task manager using an MCP server.",
     instruction="""
 You are a task management assistant.
 
-You have access to task-management tools through an MCP server.
+Use the MCP tools to manage the user's tasks.
 
 You can:
 - Add tasks
@@ -41,10 +27,25 @@ You can:
 - Delete tasks
 - Search tasks
 
-Always use the available MCP tools when the user wants to perform
-an operation on their tasks.
+When the user asks you to perform an operation on a task,
+use the appropriate MCP tool.
 
-Be concise and helpful.
+After completing an operation, clearly tell the user what happened.
 """,
-    tools=[task_mcp],
+    tools=[
+        McpToolset(
+            connection_params=StdioConnectionParams(
+                server_params=StdioServerParameters(
+                    command=sys.executable,
+                    args=[str(MCP_SERVER)],
+                ),
+                timeout=10,
+            ),
+            tool_filter=[
+                "add_task",
+                "list_tasks",
+                "complete_task",
+            ],
+        )
+    ]   
 )

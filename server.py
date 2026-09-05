@@ -62,6 +62,26 @@ def complete_task(task_id: int) -> str:
 
     return f"Task {task_id} not found."
 
+@mcp.resource("tasks://all")
+def get_all_tasks() -> str:
+    """Return all tasks."""
+    tasks = load_tasks()
+
+    return json.dumps(tasks, indent=2)
+@mcp.prompt()
+def daily_task_review() -> str:
+    """Create a prompt for reviewing today's tasks."""
+    return """
+Review my current tasks.
+
+Identify:
+1. Which tasks are still pending.
+2. Which task should be completed first.
+3. Give a short reason for your recommendation.
+"""
+
+
+
 
 if __name__ == "__main__":
     mcp.run()

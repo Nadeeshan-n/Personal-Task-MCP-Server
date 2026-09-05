@@ -62,6 +62,19 @@ def complete_task(task_id: int) -> str:
 
     return f"Task {task_id} not found."
 
+@mcp.tool()
+def delete_task(task_id: int) -> str:
+    """Delete a task by its ID."""
+    tasks = load_tasks()
+
+    for task in tasks:
+        if task["id"] == task_id:
+            tasks.remove(task)
+            save_tasks(tasks)
+            return f"Task {task_id} deleted."
+
+    return f"Task {task_id} not found."
+
 @mcp.resource("tasks://all")
 def get_all_tasks() -> str:
     """Return all tasks."""

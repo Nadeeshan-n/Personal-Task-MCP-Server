@@ -112,7 +112,28 @@ Identify:
 3. Give a short reason for your recommendation.
 """
 
+@mcp.tool()
+def search_tasks(keyword: str) -> str:
+    """Search tasks by title."""
 
+    if not keyword.strip():
+        return "Error: Search keyword cannot be empty."
+
+    tasks = load_tasks()
+
+    matches = [
+        task for task in tasks
+        if keyword.lower() in task["title"].lower()
+    ]
+
+    if not matches:
+        return f"No tasks found matching '{keyword}'."
+
+    return "\n".join(
+        f"{task['id']} - {task['title']} - "
+        f"{'completed' if task['completed'] else 'pending'}"
+        for task in matches
+    )
 
 
 if __name__ == "__main__":

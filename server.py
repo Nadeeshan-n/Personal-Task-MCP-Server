@@ -1,5 +1,6 @@
 
 from mcp.server.fastmcp import FastMCP
+from google.adk.tools import FunctionTool
 import json
 
 mcp = FastMCP("Task Server")
@@ -134,6 +135,23 @@ def search_tasks(keyword: str) -> str:
         f"{'completed' if task['completed'] else 'pending'}"
         for task in matches
     )
+
+from google.adk.tools import FunctionTool
+
+
+def get_current_tasks() -> str:
+    """
+    Read the current tasks from the task MCP server.
+
+    This function is only a demonstration of how an ADK agent
+    can use MCP-provided data as context.
+    """
+    # We will connect this directly to the MCP resource
+    # in the next step.
+    return "Use the MCP tasks resource: tasks://all"
+
+
+get_tasks_tool = FunctionTool(func=get_current_tasks)
 
 
 if __name__ == "__main__":

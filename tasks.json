@@ -12,7 +12,7 @@
   {
     "id": 4,
     "title": "Build an AI Agent",
-    "completed": false
+    "completed": true
   },
   {
     "id": 5,
@@ -30,14 +30,9 @@
     "completed": false
   },
   {
-    "id": 8,
-    "title": "Build MCP server",
-    "completed": false
-  },
-  {
     "id": 9,
     "title": "Learn MCP",
-    "completed": false
+    "completed": true
   },
   {
     "id": 10,
@@ -52,6 +47,11 @@
   {
     "id": 12,
     "title": "Build an AI Agent",
+    "completed": false
+  },
+  {
+    "id": 13,
+    "title": "Learn Google ADK",
     "completed": false
   }
 ]

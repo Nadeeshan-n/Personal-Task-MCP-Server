@@ -29,7 +29,7 @@ async def main():
             result = await session.call_tool(
                 "add_task",
                 arguments={
-                    "title": "Learn MCP"
+                    "title": "Build an AI Agent"
                 }
             )
 
@@ -44,6 +44,16 @@ async def main():
 
             print("\nTask list:")
             print(result.content)
+
+            result = await session.call_tool(
+                "delete_task",
+                arguments={
+                    "task_id": 1
+                }
+            )
+            print(result.content)
+
+
 
 
 if __name__ == "__main__":

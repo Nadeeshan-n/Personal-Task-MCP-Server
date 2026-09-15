@@ -3,15 +3,17 @@ import json
 import os
 import re
 
+from dotenv import load_dotenv
 from google import genai
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+load_dotenv()
 
 async def main():
 
     client = genai.Client(
-        api_key=os.environ["GEMINI_API_KEY"]
+        api_key=os.getenv("GEMINI_API_KEY")
     )
 
     server_params = StdioServerParameters(

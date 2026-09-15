@@ -53,5 +53,10 @@
     "id": 13,
     "title": "Learn Google ADK",
     "completed": false
+  },
+  {
+    "id": 14,
+    "title": "Build an AI Agent",
+    "completed": false
   }
 ]
